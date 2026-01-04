@@ -44,29 +44,17 @@ struct Scalar {
     // Constructors
     // ─────────────────────────────────────────────────────────────────
     
-    constexpr Scalar() noexcept : value{}, dtype(DType::F32) {
-        value.f32 = 0.0f;
-    }
+    constexpr Scalar() noexcept : value{.f32 = 0.0f}, dtype(DType::F32) {}
     
-    constexpr Scalar(float v) noexcept : dtype(DType::F32) {
-        value.f32 = v;
-    }
+    constexpr Scalar(float v) noexcept : value{.f32 = v}, dtype(DType::F32) {}
     
-    constexpr Scalar(double v) noexcept : dtype(DType::F64) {
-        value.f64 = v;
-    }
+    constexpr Scalar(double v) noexcept : value{.f64 = v}, dtype(DType::F64) {}
     
-    constexpr Scalar(int32_t v) noexcept : dtype(DType::I32) {
-        value.i32 = v;
-    }
+    constexpr Scalar(int32_t v) noexcept : value{.i32 = v}, dtype(DType::I32) {}
     
-    constexpr Scalar(int64_t v) noexcept : dtype(DType::I64) {
-        value.i64 = v;
-    }
+    constexpr Scalar(int64_t v) noexcept : value{.i64 = v}, dtype(DType::I64) {}
     
-    constexpr Scalar(bool v) noexcept : dtype(DType::Bool) {
-        value.b = v;
-    }
+    constexpr Scalar(bool v) noexcept : value{.b = v}, dtype(DType::Bool) {}
     
     // ─────────────────────────────────────────────────────────────────
     // Accessors (type-checked)
