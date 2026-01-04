@@ -47,6 +47,10 @@ inline void* mem_alloc(size_t size, size_t alignment, Device device) noexcept {
 #if defined(_MSC_VER)
     return _aligned_malloc(size, alignment);
 #else
+    // posix_memalign requires alignment >= sizeof(void*) and power of 2
+    if (alignment < sizeof(void*)) {
+        alignment = sizeof(void*);
+    }
     void* ptr = nullptr;
     if (posix_memalign(&ptr, alignment, size) != 0) {
         return nullptr;
