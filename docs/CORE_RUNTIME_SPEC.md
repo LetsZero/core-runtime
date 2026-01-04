@@ -4,8 +4,6 @@
 
 The Core Runtime is the final boundary of the Zero compiler. It is the language of execution, not the language of expression. If a high-level feature cannot be lowered into these seven primitives, it cannot exist in Zero.
 
----
-
 ### **1. Tensor**
 The *only* real data container. Tensors are treated as first-class primitives, not library objects.
 *   **Attributes:** Shape, strides, dtype, device (CPU/GPU/NPU).
@@ -50,8 +48,6 @@ A minimal, orthogonal set of mathematical primitives.
 *   **Set:** Elementwise (add, mul, etc.), MatMul, Convolution, Reduction (sum, max), Broadcast, and Reshape.
 *   **Composition:** Every complex ML operation (LayerNorm, Attention, etc.) must be a composition of these core ops or a specialized lowering.
 
----
-
 ## **🚫 What is NOT in Core Runtime**
 
 The following features are **explicitly excluded** from the Core. They may exist in the Zero frontend for developer convenience, but they are **erased** (lowered) before reaching the runtime:
@@ -61,21 +57,15 @@ The following features are **explicitly excluded** from the Core. They may exist
 *   ❌ **Error Handling:** Exceptions, Try/Catch.
 *   ❌ **Flexibility:** Hashing, Dynamic polymorphism, Runtime reflection.
 
----
-
 ## **🧠 One-Line Mental Model**
 
 > **If it cannot be represented as Tensors + Structs + Functions + Control Flow, it does not belong in the Core Runtime.**
-
----
 
 ## **Why this is enough**
 By restricting the core to these primitives, Zero gains the power to implement:
 1.  **Autograd:** Via graph traversal of pure functions.
 2.  **Optimizers:** Via struct-based parameter updates.
 3.  **Graph Compilers:** Because the limited scope makes the code "easy" for the compiler to reason about.
-
----
 
 ## **🔒 Final Recommendation**
 **Freeze this spec early.** 
