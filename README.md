@@ -8,7 +8,6 @@
   <strong>The Immutable Substrate for High-Performance ML.</strong><br>
 </p>
 
----
 
 ## 🏗️ Why an Isolated Core-Runtime?
 
@@ -18,7 +17,6 @@ Zero treats the **Core Runtime** as a sacred, isolated layer. This isolation is 
 2.  **Zero-Overhead Principle:** Because the core is written in pure C++ and contains no high-level abstractions (no dictionaries, no heavy objects), there is no "runtime tax." You pay only for the machine instructions your code actually needs.
 3.  **Auditable Determinism:** A small, frozen core is easier to verify. For ML workloads where numerical stability is everything, having a deterministic execution layer is non-negotiable.
 
----
 
 ## 🌊 Execution Flow
 
@@ -40,7 +38,6 @@ graph TD
     H -->|Execution| I[Hardware: CPU / GPU / NPU]
 ```
 
----
 
 ## 🔮 Future Potential
 
@@ -50,13 +47,11 @@ The Core Runtime is designed not just for today's hardware, but for the next dec
 *   **Embeddability:** Because the Core is a minimal C++ substrate, it can be embedded into other systems (Games, Browsers, Edge Devices) as a high-performance, lightweight ML execution engine.
 *   **Self-Hosting Evolution:** As the Core stabilizes, it provides the foundation for Zero to "write itself." Eventually, the most complex parts of the compiler will be written in Zero, running on top of this very Core Runtime.
 
----
 
 ## 🔒 The Frozen Core Commitment
 
 The Core Runtime follows a **"Freeze Early"** policy. We believe a language is only as stable as its lowest layer. Once the fundamental primitives for memory and tensor handling are verified, this repository will enter a "frozen" state—where updates are rare, highly scrutinized, and focused exclusively on performance and stability.
 
----
 
 <p align="center">
   <em>"If it can be implemented in Zero, it does not belong in the Core."</em>
