@@ -41,6 +41,44 @@
 
 ---
 
+## 🎯 Core Architectural Principles
+
+> **CRITICAL**: Zero IR should be _boringly small_
+
+### The Minimal IR Philosophy
+
+If Zero IR grows too expressive, you're recreating MLIR badly.
+
+**Zero IR should ONLY contain:**
+
+- ✅ Ops (load, store, add, mul, matmul, etc.)
+- ✅ Loops (for, while)
+- ✅ Memory (alloc, free, copy)
+- ✅ Control flow (if, branch, call, return)
+
+**ML semantics belong in:**
+
+- ✅ MLIR dialects (conv2d, attention, layernorm)
+- ✅ Standard library (written IN Zero)
+- ✅ Compiler sugar (syntactic transformations)
+
+**Keep Zero IR minimal and stable.**
+
+### What Zero Is Building
+
+You are NOT building:
+
+- ❌ "A faster Python"
+- ❌ "Another ML framework"
+
+You ARE building:
+
+> **A language whose lowest layer is ML-native**
+
+This is the right ambition.
+
+---
+
 ## 📦 Repo Structure (Recommended)
 
 ```
@@ -72,9 +110,16 @@ class LLVMCodegen {
 
 public:
     // Lower Zero IR nodes to LLVM IR
-    llvm::Value* emit(const zero::ir::Function& fn);
-    llvm::Value* emit(const zero::Tensor& tensor);
-    llvm::Value* emit_matmul(llvm::Value* A, llvm::Value* B);
+    // LLVM backend is "dumb" - it only understands:
+    // - pointers, shapes, strides, loops
+    // - loads, stores, calls
+    // Tensor semantics are already lowered in Zero IR
+
+    llvm::Value* emit_function(const zero::ir::Function& fn);
+    llvm::Value* emit_loop(const zero::ir::Loop& loop);
+    llvm::Value* emit_load(llvm::Value* ptr, llvm::Value* offset);
+    llvm::Value* emit_store(llvm::Value* ptr, llvm::Value* offset, llvm::Value* val);
+    llvm::Value* emit_call(const std::string& fn_name, llvm::ArrayRef<llvm::Value*> args);
 
     // Optimizations
     void run_optimization_passes();  // Loop vectorization, tiling
@@ -211,41 +256,109 @@ struct ZeroDict {
 - [ ] Function calls
 - [ ] Optimization passes
 
-### Phase 3: High-Level Features
+### Phase 3: High-Level Features (Limit Scope)
 
-- [ ] List type + operations
-- [ ] Dict type + operations
-- [ ] String type
-- [ ] Error handling
+> **Focus**: "Enough to write training loops" — skip fancy stdlib initially
 
-### Phase 4: ML Features
+- [ ] List type + basic operations (append, index, len)
+- [ ] Dict type + basic operations (get, set, has)
+- [ ] String type (minimal: concat, compare)
+- [ ] Error handling (basic: panic, assert)
 
-- [ ] Autograd (reverse-mode AD)
-- [ ] GPU backend (CUDA)
-- [ ] Model serialization
+**What to skip for now:**
+
+- ❌ Advanced list methods (sort, filter, etc.)
+- ❌ Complex string operations (regex, formatting)
+- ❌ Full exception system with try/catch
+
+### Phase 4A: ML Features (Runtime-Based)
+
+> **CRITICAL**: Don't make autograd a compiler pass first. Many projects die here.
+
+- [ ] Autograd (runtime tape, PyTorch-style)
+  - [ ] Tape-based gradient tracking
+  - [ ] Backward pass execution
+  - [ ] Basic optimizer (SGD)
+- [ ] CPU training works end-to-end
+- [ ] Model serialization (weights only)
+
+**Why runtime-first?**
+
+- You need working ML examples **fast**
+- IR-level AD is hard and thankless early
+- Delay elegance. Ship usefulness.
+
+### Phase 4B: Advanced Backends
+
+- [ ] GPU backend (CUDA/PTX)
+- [ ] MLIR integration
+- [ ] Kernel fusion
+- [ ] IR-level autograd (MLIR-friendly)
 
 ---
 
 ## 🔗 Key Interfaces
 
-### Zero IR Format (JSON/Binary)
+### Zero IR Format (In-Memory C++ Structs)
 
-```json
-{
-  "functions": [
-    {
-      "name": "forward",
-      "inputs": [{ "name": "x", "type": "tensor<f32, [?, 784]>" }],
-      "outputs": [{ "name": "y", "type": "tensor<f32, [?, 10]>" }],
-      "body": [
-        { "op": "matmul", "args": ["x", "weight1"], "result": "h1" },
-        { "op": "relu", "args": ["h1"], "result": "h1_act" },
-        { "op": "matmul", "args": ["h1_act", "weight2"], "result": "y" }
-      ]
-    }
-  ]
-}
+> **CRITICAL**: Zero IR is NOT JSON-first. JSON is only for debug/inspection.
+
+```cpp
+// zero-compiler/include/zero/ir/ir.hpp
+
+namespace zero::ir {
+
+enum class OpKind {
+    Load, Store, Add, Mul, MatMul,
+    Loop, Branch, Call, Return
+};
+
+struct Value {
+    std::string name;
+    DType dtype;
+    std::vector<int64_t> shape;
+};
+
+struct Op {
+    OpKind kind;
+    std::vector<Value*> inputs;
+    std::vector<Value*> outputs;
+    std::map<std::string, Attribute> attrs;
+};
+
+struct BasicBlock {
+    std::string name;
+    std::vector<Op*> ops;
+    BasicBlock* next;
+};
+
+struct Function {
+    std::string name;
+    std::vector<Value*> inputs;
+    std::vector<Value*> outputs;
+    std::vector<BasicBlock*> blocks;
+};
+
+struct Module {
+    std::vector<Function*> functions;
+
+    // Binary serialization (flatbuffers/protobuf/custom)
+    void serialize_to_binary(const std::string& path);
+    static Module* deserialize_from_binary(const std::string& path);
+
+    // JSON = debug dump only
+    std::string to_json_debug() const;
+};
+
+} // namespace zero::ir
 ```
+
+**Why not JSON-first?**
+
+- JSON IR kills compile speed
+- Makes pattern matching painful
+- LLVM/MLIR integrations will hate you
+- **Think: JSON is printf for IR, not the IR itself**
 
 ### C API for Core Runtime
 
@@ -267,6 +380,16 @@ extern "C" {
 2. **Define Zero IR spec** — What nodes, what serialization format?
 3. **Decide on LLVM version** — Currently targeting LLVM 17+
 4. **Set up CI** — Test on Linux, macOS, Windows
+
+---
+
+## 📝 Summary of Key Architectural Decisions
+
+1. **Zero IR is NOT JSON-first** — In-memory C++ structs + binary serialization. JSON = debug only.
+2. **LLVM backend is "dumb"** — Only understands pointers, loops, loads, stores. No Tensor semantics.
+3. **Autograd is runtime-first** — PyTorch-style tape before IR-level AD.
+4. **Zero IR is boringly small** — Ops, loops, memory, control flow. That's it.
+5. **ML semantics live elsewhere** — MLIR dialects, stdlib, compiler sugar.
 
 ---
 
