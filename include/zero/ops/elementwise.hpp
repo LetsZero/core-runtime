@@ -4,7 +4,10 @@
  * @file elementwise.hpp
  * @brief Zero Core Runtime — Elementwise Operations
  * 
- * Broadcast-aware elementwise operations on tensors.
+ * Elementwise operations on tensors.
+ * 
+ * NOTE: Activations (relu, sigmoid, tanh) are unary, shape-preserving ops.
+ * Broadcasting is a frontend concern, not a runtime concern.
  */
 
 #include "../core/tensor.hpp"
@@ -12,6 +15,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <cassert>
 
 namespace zero {
 namespace ops {
@@ -33,6 +37,8 @@ enum class ElementwiseOp : uint8_t {
     SIN = 9,
     COS = 10,
     TANH = 11,
+    RELU = 12,     // v1.1: max(0, x)
+    SIGMOID = 13,  // v1.1: 1 / (1 + exp(-x))
 };
 
 // ─────────────────────────────────────────────────────────────────────
@@ -47,7 +53,17 @@ enum class ElementwiseOp : uint8_t {
  * @param op     Operation to apply
  */
 inline void unary_op(const Tensor& input, Tensor& output, ElementwiseOp op) noexcept {
+    // Debug assertions (release build: silent return)
+#ifndef NDEBUG
+    assert(input.data != nullptr && "unary_op: input.data is null");
+    assert(output.data != nullptr && "unary_op: output.data is null");
+    assert(input.numel() == output.numel() && "unary_op: shape mismatch");
+    assert(input.ndim == output.ndim && "unary_op: ndim mismatch");
+#endif
+    
     if (input.dtype != DType::F32 || output.dtype != DType::F32) return;
+    if (input.data == nullptr || output.data == nullptr) return;
+    if (input.numel() != output.numel()) return;
     
     const float* in_ptr = static_cast<const float*>(input.data);
     float* out_ptr = static_cast<float*>(output.data);
@@ -77,6 +93,12 @@ inline void unary_op(const Tensor& input, Tensor& output, ElementwiseOp op) noex
             break;
         case ElementwiseOp::TANH:
             for (int64_t i = 0; i < n; ++i) out_ptr[i] = std::tanh(in_ptr[i]);
+            break;
+        case ElementwiseOp::RELU:
+            for (int64_t i = 0; i < n; ++i) out_ptr[i] = in_ptr[i] > 0.0f ? in_ptr[i] : 0.0f;
+            break;
+        case ElementwiseOp::SIGMOID:
+            for (int64_t i = 0; i < n; ++i) out_ptr[i] = 1.0f / (1.0f + std::exp(-in_ptr[i]));
             break;
         default:
             break;
@@ -222,6 +244,14 @@ inline void sqrt(const Tensor& input, Tensor& out) noexcept {
 
 inline void tanh(const Tensor& input, Tensor& out) noexcept {
     unary_op(input, out, ElementwiseOp::TANH);
+}
+
+inline void relu(const Tensor& input, Tensor& out) noexcept {
+    unary_op(input, out, ElementwiseOp::RELU);
+}
+
+inline void sigmoid(const Tensor& input, Tensor& out) noexcept {
+    unary_op(input, out, ElementwiseOp::SIGMOID);
 }
 
 } // namespace ops

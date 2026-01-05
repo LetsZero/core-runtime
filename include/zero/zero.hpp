@@ -23,6 +23,7 @@
 // IR primitives
 #include "ir/function.hpp"
 #include "ir/control_flow.hpp"
+#include "ir/op_kind.hpp"
 
 // Device model
 #include "device/device.hpp"

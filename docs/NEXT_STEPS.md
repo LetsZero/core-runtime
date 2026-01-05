@@ -52,9 +52,13 @@ If Zero IR grows too expressive, you're recreating MLIR badly.
 **Zero IR should ONLY contain:**
 
 - ✅ Ops (load, store, add, mul, matmul, etc.)
+- ✅ Activations (relu, sigmoid, tanh) — v1.1
 - ✅ Loops (for, while)
 - ✅ Memory (alloc, free, copy)
 - ✅ Control flow (if, branch, call, return)
+
+> **v1.1 Status**: Core semantic completeness achieved for ML graphs.
+> Performance and dtype expansion are deferred to IR/LLVM backends.
 
 **ML semantics belong in:**
 
