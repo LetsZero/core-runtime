@@ -9,6 +9,7 @@
 
 // Core primitives
 #include "core/dtype.hpp"
+#include "core/status.hpp"
 #include "core/memory.hpp"
 #include "core/tensor.hpp"
 #include "core/scalar.hpp"

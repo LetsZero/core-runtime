@@ -53,6 +53,9 @@ enum class ElementwiseOp : uint8_t {
  * @param op     Operation to apply
  */
 inline void unary_op(const Tensor& input, Tensor& output, ElementwiseOp op) noexcept {
+    // CPU-only implementation
+    if (input.device != Device::CPU || output.device != Device::CPU) return;
+    
     // Debug assertions (release build: silent return)
 #ifndef NDEBUG
     assert(input.data != nullptr && "unary_op: input.data is null");
@@ -120,6 +123,9 @@ inline void binary_op(
     Tensor& output, 
     ElementwiseOp op
 ) noexcept {
+    // CPU-only implementation
+    if (a.device != Device::CPU || b.device != Device::CPU || output.device != Device::CPU) return;
+    
     if (a.dtype != DType::F32 || b.dtype != DType::F32) return;
     
     const float* a_ptr = static_cast<const float*>(a.data);
@@ -181,6 +187,9 @@ inline void scalar_op(
     Tensor& output, 
     ElementwiseOp op
 ) noexcept {
+    // CPU-only implementation
+    if (input.device != Device::CPU || output.device != Device::CPU) return;
+    
     if (input.dtype != DType::F32) return;
     
     const float* in_ptr = static_cast<const float*>(input.data);

@@ -14,18 +14,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <new>
+#include <cassert>
 
 namespace zero {
 
-/**
- * @brief Memory allocation result
- */
-struct MemoryBlock {
-    void* ptr;
-    size_t size;
-    size_t alignment;
-    Device device;
-};
 
 /**
  * @brief Allocate aligned memory on the specified device
@@ -91,13 +83,15 @@ inline void* mem_alloc_zero(size_t size, size_t alignment, Device device) noexce
 }
 
 /**
- * @brief Copy memory between locations (same device)
+ * @brief Copy memory between CPU locations
  * 
- * @param dst  Destination pointer
- * @param src  Source pointer
+ * NOTE: CPU-only. For cross-device copies, use device-specific APIs.
+ * 
+ * @param dst  Destination pointer (must be CPU-accessible)
+ * @param src  Source pointer (must be CPU-accessible)
  * @param size Number of bytes to copy
  */
-inline void mem_copy(void* dst, const void* src, size_t size) noexcept {
+inline void mem_copy_cpu(void* dst, const void* src, size_t size) noexcept {
     if (dst != nullptr && src != nullptr && size > 0) {
         std::memcpy(dst, src, size);
     }
@@ -111,11 +105,14 @@ inline void mem_copy(void* dst, const void* src, size_t size) noexcept {
  * @param dtype Data type
  * @return Total bytes required
  */
-constexpr size_t calc_tensor_bytes(const int64_t* shape, int8_t ndim, DType dtype) noexcept {
+inline size_t calc_tensor_bytes(const int64_t* shape, int8_t ndim, DType dtype) noexcept {
     if (ndim == 0) return dtype_size(dtype); // Scalar
     
     size_t numel = 1;
     for (int8_t i = 0; i < ndim; ++i) {
+#ifndef NDEBUG
+        assert(shape[i] >= 0 && "calc_tensor_bytes: negative dimension");
+#endif
         numel *= static_cast<size_t>(shape[i]);
     }
     return numel * dtype_size(dtype);

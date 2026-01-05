@@ -30,6 +30,9 @@ enum class ReduceOp : uint8_t {
  * @brief Full reduction (tensor to scalar)
  */
 inline float reduce_all(const Tensor& input, ReduceOp op) noexcept {
+    // CPU-only implementation
+    if (input.device != Device::CPU) return 0.0f;
+    
     if (input.dtype != DType::F32) return 0.0f;
     
     const float* data = static_cast<const float*>(input.data);
@@ -82,6 +85,9 @@ inline void reduce_last_axis(
     Tensor& output, 
     ReduceOp op
 ) noexcept {
+    // CPU-only implementation
+    if (input.device != Device::CPU || output.device != Device::CPU) return;
+    
     if (input.dtype != DType::F32 || output.dtype != DType::F32) return;
     if (input.ndim == 0) return;
     
@@ -169,6 +175,9 @@ inline void mean(const Tensor& input, Tensor& output) noexcept {
  * @brief Argmax along last axis
  */
 inline void argmax(const Tensor& input, Tensor& output) noexcept {
+    // CPU-only implementation
+    if (input.device != Device::CPU || output.device != Device::CPU) return;
+    
     if (input.dtype != DType::F32) return;
     if (output.dtype != DType::I64 && output.dtype != DType::I32) return;
     

@@ -20,7 +20,7 @@ enum class DType : uint8_t {
     // Floating point
     F16 = 0,    // 16-bit float (half precision)
     F32 = 1,    // 32-bit float (single precision)
-    F64 = 2,    // 64-bit float (double precision)
+    F64 = 2,    // 64-bit float (host/debug only, not used by ML ops)
     
     // Signed integers
     I8  = 3,    // 8-bit signed integer
@@ -34,8 +34,8 @@ enum class DType : uint8_t {
     U32 = 9,    // 32-bit unsigned integer
     U64 = 10,   // 64-bit unsigned integer
     
-    // Boolean
-    Bool = 11,  // Boolean (stored as uint8_t)
+    // Logical
+    Bool = 11,  // Boolean (logical type, stored as uint8_t)
     
     // Special
     BF16 = 12,  // Brain floating point (for ML)
@@ -91,7 +91,14 @@ constexpr bool dtype_is_signed(DType dtype) noexcept {
  */
 constexpr bool dtype_is_unsigned(DType dtype) noexcept {
     return dtype == DType::U8 || dtype == DType::U16 || 
-           dtype == DType::U32 || dtype == DType::U64 || dtype == DType::Bool;
+           dtype == DType::U32 || dtype == DType::U64;
+}
+
+/**
+ * @brief Check if dtype is a logical type
+ */
+constexpr bool dtype_is_logical(DType dtype) noexcept {
+    return dtype == DType::Bool;
 }
 
 /**

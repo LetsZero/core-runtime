@@ -54,7 +54,7 @@ inline bool device_copy(
     
     // For now, only CPU-to-CPU is implemented
     if (dir == CopyDir::HOST_TO_HOST) {
-        mem_copy(dst, src, size);
+        mem_copy_cpu(dst, src, size);
         return true;
     }
     
