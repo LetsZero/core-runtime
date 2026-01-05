@@ -6,33 +6,52 @@
 
 <p align="center">
   <strong>The Immutable Substrate for High-Performance ML.</strong><br>
-  <code>v1.1.0 — SEMI-FROZEN</code>
+  <code>v1.2.0 — SEMI-FROZEN</code>
 </p>
 
 > ⚠️ **FROZEN CORE** — This repository is now frozen. Updates will be rare, highly scrutinized, and focused exclusively on bug fixes.
 
-## 🧊 Status: V1.1 SEMI-FROZEN
+## 🧊 Status: V1.2 SEMI-FROZEN
 
 The Core Runtime implements all 7 primitives defined in `docs/CORE_RUNTIME_SPEC.md`.
-**v1.1 adds semantic activation ops required for ML graphs.**
 
-| Primitive        | Header                | Description                                     |
-| ---------------- | --------------------- | ----------------------------------------------- |
-| **Tensor**       | `core/tensor.hpp`     | The only data container, O(1) views             |
-| **Scalar**       | `core/scalar.hpp`     | Rank-0 tensor, compile-time constants           |
-| **Struct**       | `core/struct.hpp`     | Static aggregation, no methods                  |
-| **Control Flow** | `ir/control_flow.hpp` | if/for/while → LLVM basic blocks                |
-| **Functions**    | `ir/function.hpp`     | Pure by default, explicit I/O                   |
-| **Memory**       | `core/memory.hpp`     | Explicit allocation, device placement           |
-| **Core Ops**     | `ops/*.hpp`           | Elementwise, MatMul, Reduce, Activations (v1.1) |
+**v1.2 adds infrastructure for production deployment:**
+
+- Pluggable allocator interface (`core/allocator.hpp`)
+- Deterministic mode with seed control (`core/runtime.hpp`)
+- UBSAN/TSAN sanitizer support
+
+| Primitive        | Header                | Description                              |
+| ---------------- | --------------------- | ---------------------------------------- |
+| **Tensor**       | `core/tensor.hpp`     | The only data container, O(1) views      |
+| **Scalar**       | `core/scalar.hpp`     | Rank-0 tensor, compile-time constants    |
+| **Struct**       | `core/struct.hpp`     | Static aggregation, no methods           |
+| **Control Flow** | `ir/control_flow.hpp` | if/for/while → LLVM basic blocks         |
+| **Functions**    | `ir/function.hpp`     | Pure by default, explicit I/O            |
+| **Memory**       | `core/memory.hpp`     | Explicit allocation, device placement    |
+| **Core Ops**     | `ops/*.hpp`           | Elementwise, MatMul, Reduce, Activations |
+
+**v1.2 Infrastructure:**
+
+| Component     | Header               | Description                             |
+| ------------- | -------------------- | --------------------------------------- |
+| **Allocator** | `core/allocator.hpp` | Pluggable memory allocators (v1.2)      |
+| **Runtime**   | `core/runtime.hpp`   | Seed control, deterministic mode (v1.2) |
 
 ## 🔧 Build
 
 ```bash
 cmake -B build -DZERO_BUILD_TESTS=ON
 cmake --build build --config Release
-./build/tests/Release/zero_basic_test
-./build/tests/Release/zero_benchmark
+ctest --test-dir build -C Release
+```
+
+**Sanitizer options:**
+
+```bash
+cmake -B build-asan -DZERO_ENABLE_ASAN=ON    # AddressSanitizer
+cmake -B build-ubsan -DZERO_ENABLE_UBSAN=ON  # UndefinedBehaviorSanitizer
+cmake -B build-tsan -DZERO_ENABLE_TSAN=ON    # ThreadSanitizer
 ```
 
 ## 🧪 Tests

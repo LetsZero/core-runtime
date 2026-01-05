@@ -9,6 +9,7 @@
  */
 
 #include "dtype.hpp"
+#include "allocator.hpp"
 #include "../device/device.hpp"
 
 #include <cstdlib>
@@ -22,53 +23,27 @@ namespace zero {
 /**
  * @brief Allocate aligned memory on the specified device
  * 
+ * Uses the global allocator (see set_allocator()).
+ * 
  * @param size      Number of bytes to allocate
  * @param alignment Required alignment (must be power of 2)
  * @param device    Target device for allocation
  * @return Pointer to allocated memory, or nullptr on failure
  */
 inline void* mem_alloc(size_t size, size_t alignment, Device device) noexcept {
-    if (size == 0) return nullptr;
-    
-    // For now, only CPU allocation is implemented
-    // GPU/NPU backends will extend this
-    if (device != Device::CPU) {
-        return nullptr; // Not yet implemented
-    }
-
-#if defined(_MSC_VER)
-    return _aligned_malloc(size, alignment);
-#else
-    // posix_memalign requires alignment >= sizeof(void*) and power of 2
-    if (alignment < sizeof(void*)) {
-        alignment = sizeof(void*);
-    }
-    void* ptr = nullptr;
-    if (posix_memalign(&ptr, alignment, size) != 0) {
-        return nullptr;
-    }
-    return ptr;
-#endif
+    return get_allocator()->alloc(size, alignment, device);
 }
 
 /**
  * @brief Free memory allocated by mem_alloc
  * 
+ * Uses the global allocator (see set_allocator()).
+ * 
  * @param ptr    Pointer to memory block
  * @param device Device where memory was allocated
  */
 inline void mem_free(void* ptr, Device device) noexcept {
-    if (ptr == nullptr) return;
-    
-    if (device != Device::CPU) {
-        return; // GPU/NPU backends will extend this
-    }
-
-#if defined(_MSC_VER)
-    _aligned_free(ptr);
-#else
-    free(ptr);
-#endif
+    get_allocator()->free(ptr, device);
 }
 
 /**
