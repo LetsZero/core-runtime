@@ -21,3 +21,8 @@ add_test(NAME ZeroActivationTest COMMAND zero_activation_test)
 add_executable(zero_dtype_fp8_test test_dtype_fp8.cpp)
 target_link_libraries(zero_dtype_fp8_test PRIVATE zero-core)
 add_test(NAME ZeroDTypeFP8Test COMMAND zero_dtype_fp8_test)
+
+# Op status tests (spec 002)
+add_executable(zero_op_status_test test_op_status.cpp)
+target_link_libraries(zero_op_status_test PRIVATE zero-core)
+add_test(NAME ZeroOpStatusTest COMMAND zero_op_status_test)

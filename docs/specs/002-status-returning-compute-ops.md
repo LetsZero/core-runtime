@@ -1,8 +1,8 @@
 # Spec 002: Compute ops return `Status`
 
-**Status:** Approved
+**Status:** Implemented
 **Depends on:** none (independent of spec 001)
-**PR:** (pending)
+**PR:** (local commit, not yet pushed)
 **Author:** Ritwik
 
 ---
@@ -131,3 +131,10 @@ Existing tests (`basic_test.cpp`, `test_activations.cpp`) must continue to pass.
 ## Amendment log
 
 - *Pre-approval* — Resolved both open questions autonomously. (a) `matmul` keeps all shape failures under `INVALID_ARGUMENT` with descriptive `msg` strings; the `StatusCode` enum stays narrow. (b) Tests live in a single `tests/test_op_status.cpp` rather than one file per op.
+- *Implementation* — Decisions made during impl:
+  - **Validation order**: null-data check runs FIRST in every validator. Without this, passing `Tensor::empty()` (which has `ndim==0`) would fail the ndim/shape check before reaching the null-data check, returning `INVALID_ARGUMENT` instead of the more diagnostic `INVALID_STATE`. The spec was silent on order; documenting here that null-pointer is always checked before shape/dtype.
+  - **Binary op shape rule**: validation accepts `b.numel() == 1` (scalar broadcast on RHS) in addition to `a.shape == b.shape`, preserving existing impl behavior. Spec §3's "matching shapes else `INVALID_ARGUMENT`" was too strict; this is a softer reading.
+  - **Argmax output dtype**: existing impl accepted both I32 and I64; preserved that rather than narrowing to I64 only as spec §3 implied. Spec §2's "I64" invariant amended in practice to "I32 or I64."
+  - **Non-CPU device**: returns `INVALID_ARGUMENT` with msg "non-CPU device not supported" rather than `NOT_IMPLEMENTED`, because device-other-than-CPU is a caller error in v1 (CPU is the only supported device).
+  - **F32-only**: when dtype is consistent across operands but not F32, returns `TYPE_MISMATCH` with msg "only F32 supported on CPU" rather than `NOT_IMPLEMENTED`. Treating dtype-unsupported as a type error keeps the `StatusCode` enum narrow.
+- *Implementation, verification* — Full test suite (5 binaries: basic, benchmark, activations, dtype_fp8, op_status) builds and 5/5 pass via `ctest`. The new `ZeroOpStatusTest` has 41 assertions covering OK/type-mismatch/shape-mismatch/null-data paths across unary, binary, scalar, matmul, and reduce op families.

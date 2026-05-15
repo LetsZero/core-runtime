@@ -81,12 +81,12 @@ int main() {
         b_data[i] = static_cast<float>(i + 5);  // [5, 6, 7, 8]
     }
     
-    ops::add(a, b, c);
+    ASSERT(ops::add(a, b, c).is_ok(), "Add returned ok");
     float* c_data = static_cast<float*>(c.data);
     ASSERT_FLOAT_EQ(c_data[0], 6.0f, "Add [0]");
     ASSERT_FLOAT_EQ(c_data[3], 12.0f, "Add [3]");
-    
-    ops::mul(a, b, c);
+
+    ASSERT(ops::mul(a, b, c).is_ok(), "Mul returned ok");
     ASSERT_FLOAT_EQ(c_data[0], 5.0f, "Mul [0]");
     ASSERT_FLOAT_EQ(c_data[3], 32.0f, "Mul [3]");
     
@@ -116,7 +116,7 @@ int main() {
         B_data[i] = static_cast<float>(i + 1);
     }
     
-    ops::matmul(A, B, C);
+    ASSERT(ops::matmul(A, B, C).is_ok(), "Matmul returned ok");
     float* C_data = static_cast<float*>(C.data);
     ASSERT_FLOAT_EQ(C_data[0], 22.0f, "Matmul [0,0]");
     ASSERT_FLOAT_EQ(C_data[1], 28.0f, "Matmul [0,1]");

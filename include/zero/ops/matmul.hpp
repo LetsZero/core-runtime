@@ -3,52 +3,61 @@
 /**
  * @file matmul.hpp
  * @brief Zero Core Runtime — Matrix Multiplication
- * 
+ *
  * GEMM: C = alpha * A @ B + beta * C
+ *
+ * Spec 002: returns Status. On validation failure C is not modified.
  */
 
 #include "../core/tensor.hpp"
 #include "../core/scalar.hpp"
+#include "../core/status.hpp"
 
 namespace zero {
 namespace ops {
 
+namespace detail {
+
+inline Status validate_gemm(const Tensor& A, const Tensor& B, const Tensor& C) noexcept {
+    if (A.data == nullptr || B.data == nullptr || C.data == nullptr)
+        return status::invalid_state("null data pointer");
+    if (A.device != Device::CPU || B.device != Device::CPU || C.device != Device::CPU)
+        return status::invalid_argument("non-CPU device not supported");
+    if (A.dtype != B.dtype || A.dtype != C.dtype)
+        return status::type_mismatch("dtype disagreement among A, B, C");
+    if (A.dtype != DType::F32)
+        return status::type_mismatch("only F32 supported on CPU");
+    if (A.ndim != 2 || B.ndim != 2 || C.ndim != 2)
+        return status::invalid_argument("gemm requires rank-2 tensors");
+    if (A.shape[1] != B.shape[0])
+        return status::invalid_argument("inner dimension mismatch (A.cols != B.rows)");
+    if (C.shape[0] != A.shape[0] || C.shape[1] != B.shape[1])
+        return status::invalid_argument("output shape mismatch (must be [A.rows, B.cols])");
+    return status::OK;
+}
+
+} // namespace detail
+
 /**
- * @brief General matrix multiplication (GEMM)
- * 
- * C = alpha * A @ B + beta * C
- * 
- * @param A      Left matrix [M, K]
- * @param B      Right matrix [K, N]
- * @param C      Output matrix [M, N]
- * @param alpha  Scaling factor for A @ B
- * @param beta   Scaling factor for existing C
+ * @brief General matrix multiplication (GEMM): C = alpha * A @ B + beta * C
  */
-inline void gemm(
+inline Status gemm(
     const Tensor& A,
     const Tensor& B,
     Tensor& C,
     float alpha = 1.0f,
     float beta = 0.0f
 ) noexcept {
-    // Explicit device check (CPU-only implementation)
-    if (A.device != Device::CPU || B.device != Device::CPU || C.device != Device::CPU) return;
-    
-    // Validate dimensions
-    if (A.ndim != 2 || B.ndim != 2 || C.ndim != 2) return;
-    if (A.dtype != DType::F32 || B.dtype != DType::F32 || C.dtype != DType::F32) return;
-    
+    if (Status s = detail::validate_gemm(A, B, C); s.is_error()) return s;
+
     int64_t M = A.shape[0];
     int64_t K = A.shape[1];
     int64_t N = B.shape[1];
-    
-    if (B.shape[0] != K || C.shape[0] != M || C.shape[1] != N) return;
-    
+
     const float* a_ptr = static_cast<const float*>(A.data);
     const float* b_ptr = static_cast<const float*>(B.data);
     float* c_ptr = static_cast<float*>(C.data);
-    
-    // Naive implementation (will be optimized via Zero IR lowering)
+
     for (int64_t m = 0; m < M; ++m) {
         for (int64_t n = 0; n < N; ++n) {
             float sum = 0.0f;
@@ -58,13 +67,14 @@ inline void gemm(
             c_ptr[m * N + n] = alpha * sum + beta * c_ptr[m * N + n];
         }
     }
+    return status::OK;
 }
 
 /**
- * @brief Matrix multiplication (A @ B)
+ * @brief Matrix multiplication (A @ B). Wraps gemm with alpha=1, beta=0.
  */
-inline void matmul(const Tensor& A, const Tensor& B, Tensor& C) noexcept {
-    gemm(A, B, C, 1.0f, 0.0f);
+inline Status matmul(const Tensor& A, const Tensor& B, Tensor& C) noexcept {
+    return gemm(A, B, C, 1.0f, 0.0f);
 }
 
 // NOTE: batched_matmul and matvec removed from core.

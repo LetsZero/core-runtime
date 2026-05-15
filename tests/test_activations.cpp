@@ -46,7 +46,7 @@ void test_relu_correctness() {
         a_data[1] = 0.0f;
         a_data[2] = 2.0f;
         
-        relu(a, out);
+        ASSERT(relu(a, out).is_ok(), "relu returned ok");
         float* out_data = static_cast<float*>(out.data);
         
         ASSERT_NEAR(out_data[0], 0.0f, 1e-6f, "relu(-1) = 0");
@@ -80,7 +80,7 @@ void test_relu_correctness() {
         float* a_data = static_cast<float*>(a.data);
         a_data[0] = -1000.0f;
         
-        relu(a, out);
+        ASSERT(relu(a, out).is_ok(), "relu returned ok");
         float* out_data = static_cast<float*>(out.data);
         
         ASSERT(!std::isnan(out_data[0]), "relu(-1000) does not produce NaN");
@@ -107,7 +107,7 @@ void test_sigmoid_correctness() {
         float* a_data = static_cast<float*>(a.data);
         a_data[0] = 0.0f;
         
-        sigmoid(a, out);
+        ASSERT(sigmoid(a, out).is_ok(), "sigmoid returned ok");
         float* out_data = static_cast<float*>(out.data);
         
         ASSERT_NEAR(out_data[0], 0.5f, 1e-6f, "sigmoid(0) = 0.5");
@@ -128,7 +128,7 @@ void test_sigmoid_correctness() {
         a_data[2] = 2.0f;     // Should be > 0.5
         a_data[3] = 100.0f;   // Should be close to 1
         
-        sigmoid(a, out);
+        ASSERT(sigmoid(a, out).is_ok(), "sigmoid returned ok");
         float* out_data = static_cast<float*>(out.data);
         
         ASSERT(out_data[0] >= 0.0f && out_data[0] < 0.01f, "sigmoid(-100) ≈ 0");
@@ -150,7 +150,7 @@ void test_sigmoid_correctness() {
         a_data[0] = 100.0f;   // Large positive
         a_data[1] = -100.0f;  // Large negative
         
-        sigmoid(a, out);
+        ASSERT(sigmoid(a, out).is_ok(), "sigmoid returned ok");
         float* out_data = static_cast<float*>(out.data);
         
         ASSERT(!std::isnan(out_data[0]), "sigmoid(100) does not produce NaN");
