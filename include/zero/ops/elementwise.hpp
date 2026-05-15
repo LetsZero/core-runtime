@@ -16,6 +16,7 @@
 #include "../core/tensor.hpp"
 #include "../core/scalar.hpp"
 #include "../core/status.hpp"
+#include "../device/sync.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -99,7 +100,9 @@ inline Status validate_scalar_op(const Tensor& input, const Tensor& output) noex
  *
  * Returns ok() on success; on validation failure the output is not modified.
  */
-inline Status unary_op(const Tensor& input, Tensor& output, ElementwiseOp op) noexcept {
+inline Status unary_op(const Tensor& input, Tensor& output, ElementwiseOp op,
+                       Stream* stream = nullptr) noexcept {
+    (void)stream;  // Spec 003: parameter committed for GPU; CPU ignores.
     if (Status s = detail::validate_unary(input, output); s.is_error()) return s;
 
     const float* in_ptr = static_cast<const float*>(input.data);
@@ -156,8 +159,10 @@ inline Status binary_op(
     const Tensor& a,
     const Tensor& b,
     Tensor& output,
-    ElementwiseOp op
+    ElementwiseOp op,
+    Stream* stream = nullptr
 ) noexcept {
+    (void)stream;
     if (Status s = detail::validate_binary(a, b, output); s.is_error()) return s;
 
     const float* a_ptr = static_cast<const float*>(a.data);
@@ -212,8 +217,10 @@ inline Status scalar_op(
     const Tensor& input,
     const Scalar& scalar,
     Tensor& output,
-    ElementwiseOp op
+    ElementwiseOp op,
+    Stream* stream = nullptr
 ) noexcept {
+    (void)stream;
     if (Status s = detail::validate_scalar_op(input, output); s.is_error()) return s;
 
     const float* in_ptr = static_cast<const float*>(input.data);
@@ -244,48 +251,48 @@ inline Status scalar_op(
 // Convenience Functions
 // ─────────────────────────────────────────────────────────────────────
 
-inline Status add(const Tensor& a, const Tensor& b, Tensor& out) noexcept {
-    return binary_op(a, b, out, ElementwiseOp::ADD);
+inline Status add(const Tensor& a, const Tensor& b, Tensor& out, Stream* stream = nullptr) noexcept {
+    return binary_op(a, b, out, ElementwiseOp::ADD, stream);
 }
 
-inline Status sub(const Tensor& a, const Tensor& b, Tensor& out) noexcept {
-    return binary_op(a, b, out, ElementwiseOp::SUB);
+inline Status sub(const Tensor& a, const Tensor& b, Tensor& out, Stream* stream = nullptr) noexcept {
+    return binary_op(a, b, out, ElementwiseOp::SUB, stream);
 }
 
-inline Status mul(const Tensor& a, const Tensor& b, Tensor& out) noexcept {
-    return binary_op(a, b, out, ElementwiseOp::MUL);
+inline Status mul(const Tensor& a, const Tensor& b, Tensor& out, Stream* stream = nullptr) noexcept {
+    return binary_op(a, b, out, ElementwiseOp::MUL, stream);
 }
 
-inline Status div(const Tensor& a, const Tensor& b, Tensor& out) noexcept {
-    return binary_op(a, b, out, ElementwiseOp::DIV);
+inline Status div(const Tensor& a, const Tensor& b, Tensor& out, Stream* stream = nullptr) noexcept {
+    return binary_op(a, b, out, ElementwiseOp::DIV, stream);
 }
 
-inline Status neg(const Tensor& input, Tensor& out) noexcept {
-    return unary_op(input, out, ElementwiseOp::NEG);
+inline Status neg(const Tensor& input, Tensor& out, Stream* stream = nullptr) noexcept {
+    return unary_op(input, out, ElementwiseOp::NEG, stream);
 }
 
-inline Status exp(const Tensor& input, Tensor& out) noexcept {
-    return unary_op(input, out, ElementwiseOp::EXP);
+inline Status exp(const Tensor& input, Tensor& out, Stream* stream = nullptr) noexcept {
+    return unary_op(input, out, ElementwiseOp::EXP, stream);
 }
 
-inline Status log(const Tensor& input, Tensor& out) noexcept {
-    return unary_op(input, out, ElementwiseOp::LOG);
+inline Status log(const Tensor& input, Tensor& out, Stream* stream = nullptr) noexcept {
+    return unary_op(input, out, ElementwiseOp::LOG, stream);
 }
 
-inline Status sqrt(const Tensor& input, Tensor& out) noexcept {
-    return unary_op(input, out, ElementwiseOp::SQRT);
+inline Status sqrt(const Tensor& input, Tensor& out, Stream* stream = nullptr) noexcept {
+    return unary_op(input, out, ElementwiseOp::SQRT, stream);
 }
 
-inline Status tanh(const Tensor& input, Tensor& out) noexcept {
-    return unary_op(input, out, ElementwiseOp::TANH);
+inline Status tanh(const Tensor& input, Tensor& out, Stream* stream = nullptr) noexcept {
+    return unary_op(input, out, ElementwiseOp::TANH, stream);
 }
 
-inline Status relu(const Tensor& input, Tensor& out) noexcept {
-    return unary_op(input, out, ElementwiseOp::RELU);
+inline Status relu(const Tensor& input, Tensor& out, Stream* stream = nullptr) noexcept {
+    return unary_op(input, out, ElementwiseOp::RELU, stream);
 }
 
-inline Status sigmoid(const Tensor& input, Tensor& out) noexcept {
-    return unary_op(input, out, ElementwiseOp::SIGMOID);
+inline Status sigmoid(const Tensor& input, Tensor& out, Stream* stream = nullptr) noexcept {
+    return unary_op(input, out, ElementwiseOp::SIGMOID, stream);
 }
 
 } // namespace ops

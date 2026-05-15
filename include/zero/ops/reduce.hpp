@@ -13,6 +13,7 @@
 
 #include "../core/tensor.hpp"
 #include "../core/status.hpp"
+#include "../device/sync.hpp"
 
 #include <limits>
 #include <cmath>
@@ -119,8 +120,10 @@ inline Status validate_reduce_last(
 inline Status reduce_last_axis(
     const Tensor& input,
     Tensor& output,
-    ReduceOp op
+    ReduceOp op,
+    Stream* stream = nullptr
 ) noexcept {
+    (void)stream;  // Spec 003: parameter committed for GPU; CPU ignores.
     if (Status s = detail::validate_reduce_last(input, output, DType::F32); s.is_error())
         return s;
 
@@ -197,22 +200,23 @@ inline float mean_all(const Tensor& input) noexcept {
 // Tensor-output reductions (Status-returning per spec 002)
 // ─────────────────────────────────────────────────────────────────────
 
-inline Status sum(const Tensor& input, Tensor& output) noexcept {
-    return reduce_last_axis(input, output, ReduceOp::SUM);
+inline Status sum(const Tensor& input, Tensor& output, Stream* stream = nullptr) noexcept {
+    return reduce_last_axis(input, output, ReduceOp::SUM, stream);
 }
 
-inline Status max(const Tensor& input, Tensor& output) noexcept {
-    return reduce_last_axis(input, output, ReduceOp::MAX);
+inline Status max(const Tensor& input, Tensor& output, Stream* stream = nullptr) noexcept {
+    return reduce_last_axis(input, output, ReduceOp::MAX, stream);
 }
 
-inline Status mean(const Tensor& input, Tensor& output) noexcept {
-    return reduce_last_axis(input, output, ReduceOp::MEAN);
+inline Status mean(const Tensor& input, Tensor& output, Stream* stream = nullptr) noexcept {
+    return reduce_last_axis(input, output, ReduceOp::MEAN, stream);
 }
 
 /**
  * @brief Argmax along last axis. Output dtype must be I32 or I64.
  */
-inline Status argmax(const Tensor& input, Tensor& output) noexcept {
+inline Status argmax(const Tensor& input, Tensor& output, Stream* stream = nullptr) noexcept {
+    (void)stream;  // Spec 003: parameter committed for GPU; CPU ignores.
     if (input.data == nullptr || output.data == nullptr)
         return status::invalid_state("null data pointer");
     if (input.device != Device::CPU || output.device != Device::CPU)

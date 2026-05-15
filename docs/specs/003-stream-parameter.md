@@ -1,8 +1,8 @@
 # Spec 003: `Stream*` parameter on compute ops
 
-**Status:** Approved
+**Status:** Implemented
 **Depends on:** spec 002 (uniform `Status`-returning op surface)
-**PR:** (pending)
+**PR:** (local commit, not yet pushed)
 **Author:** Ritwik
 
 ---
@@ -89,3 +89,8 @@ Existing tests do not require modification — the default-null parameter preser
 ## Amendment log
 
 - *Pre-approval* — Resolved trivially. Tests live in a single `tests/test_op_stream.cpp`. Stream parameter is unconditionally `nullptr`-defaulted and last (no per-op exceptions).
+- *Implementation* — Decisions made during impl:
+  - Suppressed unused-parameter warnings via `(void)stream;` at the top of each function body that has one (the actual op kernels). The convenience wrappers (`add`, `sub`, `relu`, `sum`, …) forward the parameter into the kernel and therefore do not need the suppression. Once a GPU backend lands, the `(void)stream;` lines come out as `stream` becomes a real argument.
+  - `<../device/sync.hpp>` added to `elementwise.hpp`, `matmul.hpp`, `reduce.hpp`.
+  - For `gemm`, the new `Stream*` parameter is the **last** argument, after the existing `alpha` and `beta` defaults. This keeps the rule "Stream is always last" consistent and only adds another defaulted parameter.
+- *Implementation, verification* — `ctest` 6/6 passing. The spec 002 test (`ZeroOpStatusTest`) passed **unmodified**, which is the direct proof of the spec 003 invariant that `nullptr`-defaulting preserves source-level compatibility for existing callers.

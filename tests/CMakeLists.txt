@@ -26,3 +26,8 @@ add_test(NAME ZeroDTypeFP8Test COMMAND zero_dtype_fp8_test)
 add_executable(zero_op_status_test test_op_status.cpp)
 target_link_libraries(zero_op_status_test PRIVATE zero-core)
 add_test(NAME ZeroOpStatusTest COMMAND zero_op_status_test)
+
+# Op stream parameter tests (spec 003)
+add_executable(zero_op_stream_test test_op_stream.cpp)
+target_link_libraries(zero_op_stream_test PRIVATE zero-core)
+add_test(NAME ZeroOpStreamTest COMMAND zero_op_stream_test)

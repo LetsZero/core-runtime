@@ -12,6 +12,7 @@
 #include "../core/tensor.hpp"
 #include "../core/scalar.hpp"
 #include "../core/status.hpp"
+#include "../device/sync.hpp"
 
 namespace zero {
 namespace ops {
@@ -46,8 +47,10 @@ inline Status gemm(
     const Tensor& B,
     Tensor& C,
     float alpha = 1.0f,
-    float beta = 0.0f
+    float beta = 0.0f,
+    Stream* stream = nullptr
 ) noexcept {
+    (void)stream;  // Spec 003: parameter committed for GPU; CPU ignores.
     if (Status s = detail::validate_gemm(A, B, C); s.is_error()) return s;
 
     int64_t M = A.shape[0];
@@ -73,8 +76,9 @@ inline Status gemm(
 /**
  * @brief Matrix multiplication (A @ B). Wraps gemm with alpha=1, beta=0.
  */
-inline Status matmul(const Tensor& A, const Tensor& B, Tensor& C) noexcept {
-    return gemm(A, B, C, 1.0f, 0.0f);
+inline Status matmul(const Tensor& A, const Tensor& B, Tensor& C,
+                     Stream* stream = nullptr) noexcept {
+    return gemm(A, B, C, 1.0f, 0.0f, stream);
 }
 
 // NOTE: batched_matmul and matvec removed from core.
