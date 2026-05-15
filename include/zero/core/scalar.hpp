@@ -272,6 +272,8 @@ struct Scalar {
             case DType::Bool: std::printf("Scalar(bool: %s)\n", value.b ? "true" : "false"); break;
             case DType::F16:  std::printf("Scalar(f16: bits=0x%04x)\n", value.f16_bits); break;
             case DType::BF16: std::printf("Scalar(bf16: bits=0x%04x)\n", value.f16_bits); break;
+            case DType::F8_E4M3: std::printf("Scalar(f8_e4m3: bits=0x%02x)\n", value.u8); break;
+            case DType::F8_E5M2: std::printf("Scalar(f8_e5m2: bits=0x%02x)\n", value.u8); break;
         }
     }
 #else

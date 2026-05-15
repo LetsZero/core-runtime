@@ -39,6 +39,11 @@ enum class DType : uint8_t {
     
     // Special
     BF16 = 12,  // Brain floating point (for ML)
+
+    // FP8 (spec 001) — enum values only; no kernels yet.
+    // Appended after BF16, never reordered.
+    F8_E4M3 = 13,  // 8-bit float, 4-bit exponent, 3-bit mantissa (inference)
+    F8_E5M2 = 14,  // 8-bit float, 5-bit exponent, 2-bit mantissa (training)
 };
 
 /**
@@ -59,6 +64,8 @@ constexpr size_t dtype_size(DType dtype) noexcept {
         case DType::U64:  return 8;
         case DType::Bool: return 1;
         case DType::BF16: return 2;
+        case DType::F8_E4M3: return 1;
+        case DType::F8_E5M2: return 1;
     }
     return 0; // Unreachable
 }
@@ -74,8 +81,9 @@ constexpr size_t dtype_alignment(DType dtype) noexcept {
  * @brief Check if dtype is a floating point type
  */
 constexpr bool dtype_is_float(DType dtype) noexcept {
-    return dtype == DType::F16 || dtype == DType::F32 || 
-           dtype == DType::F64 || dtype == DType::BF16;
+    return dtype == DType::F16 || dtype == DType::F32 ||
+           dtype == DType::F64 || dtype == DType::BF16 ||
+           dtype == DType::F8_E4M3 || dtype == DType::F8_E5M2;
 }
 
 /**
@@ -119,6 +127,8 @@ constexpr const char* dtype_name(DType dtype) noexcept {
         case DType::U64:  return "u64";
         case DType::Bool: return "bool";
         case DType::BF16: return "bf16";
+        case DType::F8_E4M3: return "f8_e4m3";
+        case DType::F8_E5M2: return "f8_e5m2";
     }
     return "unknown";
 }

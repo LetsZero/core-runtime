@@ -16,3 +16,8 @@ add_test(NAME ZeroBenchmark COMMAND zero_benchmark)
 add_executable(zero_activation_test test_activations.cpp)
 target_link_libraries(zero_activation_test PRIVATE zero-core)
 add_test(NAME ZeroActivationTest COMMAND zero_activation_test)
+
+# FP8 dtype tests (spec 001)
+add_executable(zero_dtype_fp8_test test_dtype_fp8.cpp)
+target_link_libraries(zero_dtype_fp8_test PRIVATE zero-core)
+add_test(NAME ZeroDTypeFP8Test COMMAND zero_dtype_fp8_test)
